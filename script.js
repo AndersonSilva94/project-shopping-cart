@@ -24,7 +24,7 @@ const fetchItem = (idItem) => { // requisito 2
   
 function createProductImageElement(imageSource) { // requisito 1
   const img = document.createElement('img');
-  img.className = 'item__image';
+  img.classList = 'item__image img-thumbnail';
   img.src = imageSource;
   return img;
 }
@@ -47,22 +47,49 @@ const saveItens = () => { // requisito 4
   localStorage.setItem('itensList', newArr);
 };
 
+const sumPrices = () => { // requisito 5
+  const areaPrice = document.querySelectorAll('.price');
+  const precoTotal = [...areaPrice].reduce((acc, actual) => 
+  acc + parseFloat(actual.innerText), 0).toFixed(2).toString().replace('.', ',');
+  document.querySelector('.total-price').innerText = precoTotal;
+};
+
+const savePrices = () => { // requsito 5
+  const totalPrices = document.querySelector('.p-price').outerHTML;
+  localStorage.setItem('totalPrice', totalPrices);
+};
+
+const getPrices = () => { // requisito 4
+  if (localStorage.getItem('totalPrice')) {
+    const priceCart = document.querySelector('.area-price');
+    const priceStorage = localStorage.getItem('totalPrice');
+    priceCart.innerHTML = priceStorage;
+  }
+};
+
 const cartItemClickListener = (event) => { // requisito 3
-  const eventListItem = event.target;
+  let eventListItem = event.target;
+  
+  if (eventListItem.tagName === 'SPAN') eventListItem = eventListItem.parentNode;
+
   eventListItem.remove();
   saveItens(); // requisito 4
+  sumPrices(); // requisito 5
+  savePrices(); // requisito 5
 };
 
 const createCartItemElement = ({ id: sku, title: name, price: salePrice }) => { // requisito 2
   const li = document.createElement('li');
   li.className = 'cart__item';
-  li.innerText = `SKU: ${sku} | NAME: ${name} | PRICE: $${salePrice}`;
+  li.innerHTML = `<strong>ID:</strong> ${sku} </br>
+    <strong>PRODUTO:</strong> ${name.replace(',', '/')} </br>
+    <strong>PREÇO:</strong> $<span class="price">${salePrice}</span>`;
   li.addEventListener('click', cartItemClickListener); // requisito 3
   return li;
 };
 
 const addItem = () => { // requisito 2
-  const buttons = document.querySelectorAll('.item__add');
+  const buttons = document.querySelectorAll('.btn-success');
   buttons.forEach((button) => button.addEventListener('click', async (event) => {
     const addEvent = event.target;
     const skulId = getSkuFromProductItem(addEvent.parentElement);
@@ -70,6 +97,8 @@ const addItem = () => { // requisito 2
     const itemsCart = document.querySelector('.cart__items');
     itemsCart.appendChild(createCartItemElement(data));
     saveItens(); // requisito 4
+    sumPrices(); // requisito 5
+    savePrices(); // requisito 5
   }));
 };
 
@@ -79,6 +108,8 @@ const clearButton = () => { // requisito 6
     const itemsCart = document.querySelector('.cart__items');
     itemsCart.innerHTML = '';
     saveItens(); // requisito 4
+    sumPrices(); // requisito 5
+    savePrices(); // requisito 5
   });
 };
 
@@ -101,7 +132,7 @@ const getItens = () => { // requisito 4
 };
 
 const msgLoading = () => { // requisito 7
-  const loading = document.querySelector('.loading');
+  const loading = document.querySelector('.loading-area');
   loading.remove();
 };
 
@@ -117,8 +148,8 @@ const createProductItemElement = async () => { // requisito 1
     section.appendChild(createCustomElement('span', 'item__sku', id));
     section.appendChild(createCustomElement('span', 'item__title', title));
     section.appendChild(createProductImageElement(thumbnail));
-    section.appendChild(createCustomElement('button', 'item__add', 'Adicionar ao carrinho!'));
-
+    section.appendChild(createCustomElement('button', 'btn btn-success', 'Adicionar ao carrinho!'));
+    
     sectionItems.appendChild(section);
   });
   addItem(); // requisito 2
@@ -129,4 +160,5 @@ window.onload = function onload() {
   fetchAPI(); // requisito 1
   createProductItemElement(); // requisito 1
   getItens(); // requisito 4
+  getPrices(); // requisito 5
 };
